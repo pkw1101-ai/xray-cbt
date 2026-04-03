@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<title>보안검색 X-ray 판독 훈련소 | 실전 이미지 기반 정밀 판독 실습</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@600;800&display=swap');
+
+  :root {
+    --bg-deep: #0a0e14;
+    --bg-panel: rgba(15, 23, 42, 0.9);
+    --bg-card: rgba(30, 41, 59, 0.6);
+    --border: rgba(255, 255, 255, 0.1);
+    --accent-cyan: #0ea5e9;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-purple: #8b5cf6;
+    --text-main: #f1f5f9;
+    --text-sub: #94a3b8;
+    --glow: 0 0 20px rgba(14, 165, 233, 0.3);
+  }
+
+  #xray-app-root {
+    background: var(--bg-deep);
+    color: var(--text-main);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    padding: 0; margin: 0;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  #xray-app-root * {
+    box-sizing: border-box;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ─── 관리자 input/textarea는 user-select 허용 (텍스트 입력 가능해야 함) ─── */
+  #xray-app-root input,
+  #xray-app-root textarea,
+  #xray-app-root select {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+  }
+
+  header {
+    background: var(--bg-panel);
+    backdrop-filter: blur(15px);
+    border-bottom: 1px solid var(--border);
+    padding: 1.2rem;
+    position: sticky; top: 0; z-index: 1000;
+    display: flex; justify-content: center; align-items: center;
+  }
+
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem; font-weight: 800; color: var(--accent-cyan);
+    letter-spacing: 3px; display: flex; align-items: center; gap: 12px;
+    text-shadow: var(--glow); cursor: pointer;
+  }
+
+  .logo-dot { width: 8px; height: 8px; background: var(--accent-cyan); border-radius: 50%; box-shadow: var(--glow); animation: blink 1.5s infinite; }
+  @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
+
+  main { max-width: 760px; margin: 0 auto; padding: 2rem 1.2rem; min-height: 80vh; }
+
+  .screen { display: none; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+
+  .banner-copyright {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-left: 4px solid var(--accent-red);
+    color: #fca5a5;
+    padding: 1.2rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 500;
+    line-height: 1.6;
+    word-break: keep-all;
+  }
+
+  .glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    position: relative;
+  }
+
+  .q-text {
+    font-size: 1.45rem; font-weight: 700; color: #fff; text-align: center;
+    margin-bottom: 2rem; word-break: keep-all; line-height: 1.5;
+  }
+
+  /* ─── 이미지 컨테이너: 블로그스팟 대응 강화 ─── */
+  .image-container {
+    width: 100%; height: 420px; background: #000; border-radius: 20px;
+    margin-bottom: 2rem; position: relative; overflow: hidden;
+    border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+  }
+
+  .image-container img {
+    max-width: 100%; max-height: 100%; display: none;
+    transform-origin: center center; cursor: grab; z-index: 2;
+    filter: contrast(1.1) brightness(1.05);
+    position: relative;
+  }
+
+  .loader-text { color: var(--text-sub); font-size: 0.95rem; text-align: center; z-index: 1; font-weight: 500; padding: 1rem; }
+
+  .zoom-box {
+    position: absolute; right: 20px; bottom: 20px; z-index: 10;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .btn-zoom {
+    width: 45px; height: 45px; border-radius: 12px; border: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.85); color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    backdrop-filter: blur(5px);
+  }
+  .btn-zoom:hover { background: var(--accent-cyan); transform: scale(1.05); }
+
+  .option-list { display: grid; gap: 1rem; }
+  .btn-option {
+    width: 100%; padding: 1.3rem 1.6rem; border-radius: 18px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    color: var(--text-main); text-align: left; cursor: pointer;
+    font-size: 1.1rem; display: flex; gap: 1.2rem; align-items: center;
+  }
+  .btn-option:hover:not(:disabled) { border-color: var(--accent-cyan); background: rgba(14, 165, 233, 0.12); transform: translateX(8px); }
+  .btn-option.correct { background: rgba(16, 185, 129, 0.2) !important; border-color: var(--accent-green) !important; color: #6ee7b7; font-weight: 700; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+  .btn-option.wrong { background: rgba(239, 68, 68, 0.2) !important; border-color: var(--accent-red) !important; color: #fca5a5; opacity: 0.8; }
+
+  .feedback-area {
+    margin-top: 1.8rem; padding: 1.8rem; border-radius: 20px;
+    background: rgba(14, 165, 233, 0.05); border: 1px solid rgba(14, 165, 233, 0.15);
+    display: none; text-align: center;
+  }
+
+  .btn-primary {
+    width: 100%; padding: 1.4rem; border-radius: 20px; margin-top: 1.8rem;
+    background: var(--accent-cyan); color: #fff; border: none;
+    font-weight: 800; font-size: 1.2rem; cursor: pointer; display: none;
+    box-shadow: 0 15px 30px rgba(14, 165, 233, 0.25);
+  }
+  .btn-primary:hover { filter: brightness(1.15); transform: translateY(-3px); box-shadow: 0 20px 40px rgba(14, 165, 233, 0.35); }
+
+  .score-badge {
+    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+    background: var(--accent-green); color: #fff; padding: 6px 18px;
+    border-radius: 25px; font-size: 0.85rem; font-weight: 900;
+    font-family: 'Orbitron'; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+    white-space: nowrap;
+  }
+
+  .score-display {
+    font-family: 'Orbitron'; font-size: 5rem; font-weight: 800;
+    color: var(--accent-cyan); text-shadow: var(--glow); margin: 1rem 0 2rem;
+  }
+
+  /* ─── 관리자 링크 ─── */
+  .admin-link {
+    position: fixed; bottom: 15px; right: 15px; font-size: 0.65rem;
+    color: var(--text-sub); opacity: 0.25; cursor: pointer; text-decoration: none;
+    z-index: 500;
+  }
+  .admin-link:hover { opacity: 0.8; color: var(--accent-cyan); }
+
+  /* ─── 모달: 독립적으로 처리 (screen 클래스 사용 안 함) ─── */
+  #pwModal {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+    z-index: 9999; display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .admin-input {
+    width: 100%; padding: 14px; margin-bottom: 12px;
+    background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+    color: #fff; border-radius: 12px; font-family: 'Noto Sans KR', sans-serif;
+    font-size: 1rem;
+  }
+  .admin-input:focus { border-color: var(--accent-cyan); outline: none; background: rgba(0,0,0,0.6); }
+  textarea.admin-input { resize: vertical; }
+
+  #customNotify {
+    position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+    background: #1e293b; border: 1px solid var(--accent-cyan);
+    padding: 14px 30px; border-radius: 50px; color: #fff;
+    z-index: 10001; display: none; font-weight: 600;
+    box-shadow: var(--glow); font-size: 0.95rem; white-space: nowrap;
+  }
+
+  .ebook-promo {
+    background: linear-gradient(135deg, #1e293b 0%, #0a0e14 100%);
+    border: 1px solid var(--border); border-radius: 22px;
+    padding: 2.2rem; margin-top: 3rem; text-align: center;
+  }
+  .ebook-btn {
+    display: inline-block; background: var(--accent-cyan); color: #fff !important;
+    padding: 16px 40px; border-radius: 50px; text-decoration: none;
+    font-weight: 800; font-size: 1.15rem; margin-top: 1.2rem;
+  }
+
+  /* ─── 이미지 대체 표시 (드라이브 로드 실패 시) ─── */
+  .img-fallback-wrap {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    width: 100%; height: 100%; padding: 2rem; text-align: center;
+  }
+  .img-fallback-wrap a {
+    color: var(--accent-cyan); text-decoration: underline;
+    font-size: 0.95rem; margin-top: 0.8rem; word-break: break-all;
+  }
+
+  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<div id="xray-app-root">
+<div id="customNotify"></div>
+
+<header>
+  <div class="logo" onclick="XR.goHome()"><div class="logo-dot"></div>SECURITY X-RAY INTERPRETATION</div>
+</header>
+
+<main>
+  <div class="banner-copyright">
+    ⚠️ <b>데이터 무단 사용 및 복제 금지</b><br>
+    본 시스템의 모든 판독 자료는 저작권법의 보호를 받습니다. 무단 복제 및 상업적 이용 시 강력한 법적 책임을 묻습니다.
+  </div>
+
+  <!-- 1. 시작 화면 -->
+  <div id="startScreen" class="screen">
+    <div class="glass-card" style="text-align:center;">
+      <h2 style="font-family:'Orbitron'; color:var(--accent-cyan); font-size:2.2rem; margin-bottom:1rem; letter-spacing:1px;">READY FOR SESSION</h2>
+      <p style="color:var(--text-sub); margin-bottom:3rem; font-size:1.1rem; font-weight:500;">기내 반입 금지 물품에 대한 정밀 판독 훈련을 시작합니다.</p>
+
+      <button class="btn-option" onclick="XR.startQuiz()" style="padding:3rem 2rem; flex-direction:column; align-items:center; border:2px solid var(--accent-cyan); background:rgba(14,165,233,0.06); gap:1.5rem; border-radius:30px;">
+        <span style="font-size:4rem;">🔍</span>
+        <div style="text-align:center;">
+          <strong style="font-size:1.7rem; display:block; margin-bottom:8px;">판독 훈련 세션 시작</strong>
+          <span style="opacity:0.6; font-size:1rem;">(랜덤 문제 시뮬레이션 가동)</span>
+        </div>
+      </button>
+
+      <div class="ebook-promo">
+        <p style="color:var(--text-main); font-size:1.1rem; font-weight:700;">합격의 디테일, 아직도 감으로만 판독하시나요?</p>
+        <a href="https://litt.ly/xraycbt" target="_blank" class="ebook-btn">판독 비법 전자책 바로가기 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 퀴즈 화면 -->
+  <div id="quizScreen" class="screen">
+    <div style="width:100%; height:10px; background:rgba(255,255,255,0.03); border-radius:10px; margin-bottom:3rem; overflow:hidden; border:1px solid var(--border);">
+      <div id="progressFill" style="height:100%; background:linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); width:0%; transition: width 0.5s ease;"></div>
+    </div>
+    <div class="glass-card">
+      <div class="score-badge" id="qBadge">MISSION Q 1 / 1</div>
+      <div id="qBody" class="q-text"></div>
+
+      <div class="image-container" id="imgBox">
+        <div id="imgLoader" class="loader-text">이미지 분석 중...</div>
+        <img id="mainImg" src="" alt="CBT Target"
+             onload="XR.onImgLoad()" onerror="XR.onImgError()">
+        <!-- 이미지 로드 실패 안내 -->
+        <div class="img-fallback-wrap" id="imgFallback">
+          <div style="color:var(--accent-red); font-weight:800; font-size:1.1rem;">⚠️ 이미지 로드 실패</div>
+          <small id="imgFallbackMsg" style="color:var(--text-sub); margin-top:10px; display:block; line-height:1.8; white-space:pre-line; font-size:0.88rem;"></small>
+          <a id="imgFallbackLink" href="#" target="_blank" style="color:var(--accent-cyan); font-size:0.9rem; margin-top:6px;">이미지 직접 열기 →</a>
+          <div style="margin-top:1.2rem; padding:10px 16px; background:rgba(14,165,233,0.08); border-radius:10px; font-size:0.82rem; color:var(--text-sub); line-height:1.8; text-align:left;">
+            💡 <b style="color:var(--accent-cyan);">권장 이미지 호스팅</b><br>
+            ① 블로거 글쓰기에서 직접 업로드 후 URL 복사<br>
+            ② <a href="https://imgbb.com" target="_blank" style="color:var(--accent-cyan);">imgbb.com</a> 업로드 후 Direct Link 사용
+          </div>
+        </div>
+        <div class="zoom-box">
+          <button class="btn-zoom" onclick="XR.doZoom(0.5)">+</button>
+          <button class="btn-zoom" onclick="XR.doZoom(-0.5)">−</button>
+          <button class="btn-zoom" onclick="XR.resetZoom()">⟲</button>
+        </div>
+      </div>
+
+      <div id="optContainer" class="option-list"></div>
+
+      <div id="feedbackBox" class="feedback-area">
+        <h4 id="fbTitle" style="font-size:1.5rem; margin-bottom:0.8rem; font-weight:900;"></h4>
+        <p id="fbText" style="color:var(--text-main); font-size:1.2rem; line-height:1.6; word-break:keep-all;"></p>
+        <div style="margin-top:1.5rem; display:inline-block; padding:10px 22px; background:rgba(139,92,246,0.12); border-radius:12px; color:var(--accent-purple); font-weight:900; font-size:0.9rem; letter-spacing:1px;">✨ 전문가 인공지능 분석 가이드 지원됨</div>
+      </div>
+
+      <button id="btnNext" class="btn-primary" onclick="XR.goNext()">다음 판독 단계로 이동 →</button>
+    </div>
+  </div>
+
+  <!-- 3. 결과 화면 -->
+  <div id="resultScreen" class="screen" style="text-align:center;">
+    <div class="glass-card" style="padding:4rem 2rem;">
+      <h2 style="font-family:'Orbitron'; color:var(--accent-cyan); font-size:2.8rem; margin-bottom:1rem; letter-spacing:2px;">MISSION CLEAR</h2>
+      <div id="finalScore" class="score-display">00점</div>
+      <p style="color:var(--text-sub); margin-bottom:3.5rem; font-size:1.3rem; font-weight:600;">실전 판독 세션을 성공적으로 완료하였습니다.</p>
+      <button class="btn-primary" style="display:block; margin-bottom:2.5rem; font-size:1.4rem;" onclick="XR.restartQuiz()">🔄 다시 풀기 (Restart)</button>
+      <div class="ebook-promo" style="border-color:rgba(139,92,246,0.4); background:rgba(139,92,246,0.04);">
+        <p style="color:var(--accent-purple); font-size:1.2rem; font-weight:900;">판독 정확도 상위 1%가 되는 가장 빠른 길</p>
+        <a href="https://litt.ly/xraycbt" target="_blank" class="ebook-btn" style="background:var(--accent-purple);">비법서 바로 확인하기 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 관리자 화면 -->
+  <div id="adminScreen" class="screen">
+    <div class="glass-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem;">
+        <h2 style="color:var(--accent-cyan); font-family:'Orbitron'; font-size:1.6rem;">CORE ADMIN</h2>
+        <button class="btn-zoom" style="width:auto; padding:0 22px; font-size:0.9rem; font-weight:800; border-radius:15px;" onclick="XR.goHome()">EXIT</button>
+      </div>
+      <div id="adminFormArea">
+        <h3 id="adminFormTitle" style="margin-bottom:1.5rem; color:white; font-size:1.3rem; font-weight:800;">새 문제 데이터 등록</h3>
+
+        <label style="color:var(--text-sub); font-size:0.85rem; display:block; margin-bottom:6px;">📝 판독 질문</label>
+        <input type="text" id="inText" class="admin-input" placeholder="이미지 내의 기내 반입 금지 물품은?">
+
+        <label style="color:var(--text-sub); font-size:0.85rem; display:block; margin-bottom:6px;">🖼️ 이미지 — 파일 직접 업로드 <span style="color:var(--accent-cyan);">(권장)</span> 또는 URL 입력</label>
+        <!-- 파일 업로드: Base64 변환으로 외부 호스팅 불필요 -->
+        <div style="display:flex; gap:10px; margin-bottom:10px; align-items:stretch;">
+          <label id="fileUploadLabel" style="flex:1; padding:13px 16px; background:rgba(14,165,233,0.1); border:2px dashed var(--accent-cyan); border-radius:12px; cursor:pointer; text-align:center; color:var(--accent-cyan); font-weight:700; font-size:0.95rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <span>📁 파일 선택 (jpg/png)</span>
+            <input type="file" id="inImgFile" accept="image/*" style="display:none;" onchange="XR.handleFileUpload(this)">
+          </label>
+        </div>
+        <div id="imgPreviewWrap" style="display:none; margin-bottom:10px; text-align:center;">
+          <img id="imgPreview" style="max-height:120px; border-radius:10px; border:1px solid var(--border);">
+          <div style="font-size:0.8rem; color:var(--accent-green); margin-top:6px;">✅ 이미지 로드 완료 — 저장 시 자동 포함됩니다</div>
+        </div>
+        <div style="text-align:center; color:var(--text-sub); font-size:0.82rem; margin-bottom:8px;">— 또는 외부 URL 직접 입력 —</div>
+        <input type="text" id="inImg" class="admin-input" placeholder="https://... (URL 입력 시 파일 업로드 무시됨)">
+
+        <label style="color:var(--text-sub); font-size:0.85rem; display:block; margin-bottom:6px;">📋 선택지 (4개)</label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+          <input type="text" id="o0" class="admin-input" style="margin:0;" placeholder="선택지 1">
+          <input type="text" id="o1" class="admin-input" style="margin:0;" placeholder="선택지 2">
+          <input type="text" id="o2" class="admin-input" style="margin:0;" placeholder="선택지 3">
+          <input type="text" id="o3" class="admin-input" style="margin:0;" placeholder="선택지 4">
+        </div>
+
+        <label style="color:var(--text-sub); font-size:0.85rem; display:block; margin-bottom:6px;">✅ 정답</label>
+        <select id="inAns" class="admin-input">
+          <option value="0">정답: 1번</option>
+          <option value="1">정답: 2번</option>
+          <option value="2">정답: 3번</option>
+          <option value="3">정답: 4번</option>
+        </select>
+
+        <label style="color:var(--text-sub); font-size:0.85rem; display:block; margin-bottom:6px;">💬 판독 해설</label>
+        <textarea id="inFb" class="admin-input" style="height:110px;" placeholder="판독 포인트 및 정답 해설을 입력하세요"></textarea>
+
+        <div style="display:flex; gap:12px;">
+          <button id="btnSave" class="btn-primary" style="display:block; flex:2; margin-top:10px;" onclick="XR.addOrUpdate()">💾 라이브러리 저장</button>
+          <button id="btnCancel" class="btn-primary" style="background:#475569; margin-top:10px; display:none; flex:1;" onclick="XR.cancelEdit()">✕ 취소</button>
+        </div>
+      </div>
+      <div id="adminList" style="margin-top:2rem;"></div>
+
+      <!-- 배포 워크플로우 -->
+      <div style="margin-top:2rem; padding:1.8rem; background:rgba(139,92,246,0.06); border:1px solid rgba(139,92,246,0.2); border-radius:20px;">
+        <h3 style="color:var(--accent-purple); font-size:1.1rem; font-weight:800; margin-bottom:0.8rem;">🚀 방문자 배포 워크플로우</h3>
+        <div style="color:var(--text-sub); font-size:0.85rem; margin-bottom:1.4rem; line-height:1.9; background:rgba(0,0,0,0.2); padding:1rem; border-radius:12px;">
+          <b style="color:var(--accent-cyan);">① 문제 등록 완료</b> → <b style="color:var(--accent-green);">② HTML 내보내기</b> → <b style="color:white;">③ 블로그 위젯 코드 교체</b><br>
+          <span style="font-size:0.8rem;">방문자는 별도 설치 없이 문제가 자동으로 보입니다.</span>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+          <button onclick="XR.exportData()" style="flex:2; min-width:180px; padding:16px; border-radius:14px; background:var(--accent-purple); color:white; border:none; font-weight:800; cursor:pointer; font-size:1.05rem;">
+            🌐 HTML 내보내기 (방문자 배포용)
+          </button>
+          <button onclick="XR.exportJSON()" style="flex:1; min-width:120px; padding:16px; border-radius:14px; background:rgba(255,255,255,0.05); color:var(--text-sub); border:1px solid var(--border); font-weight:700; cursor:pointer; font-size:0.9rem;">
+            💾 JSON 백업
+          </button>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <label style="flex:1; min-width:140px; padding:14px; border-radius:14px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:var(--accent-green); font-weight:700; cursor:pointer; font-size:0.9rem; text-align:center;">
+            📂 JSON 복원
+            <input type="file" accept=".json" style="display:none;" onchange="XR.importData(this)">
+          </label>
+          <button onclick="XR.resetToEmbedded()" style="flex:1; min-width:140px; padding:14px; border-radius:14px; background:rgba(239,68,68,0.08); color:var(--accent-red); border:1px solid rgba(239,68,68,0.2); font-weight:700; cursor:pointer; font-size:0.9rem;">
+            ↺ 내장 문제로 초기화
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- 관리자 접근 링크 -->
+<div class="admin-link" onclick="XR.openAdmin()">ACCESS SECURE TERMINAL</div>
+
+<!-- 비밀번호 모달 (screen 클래스와 완전 분리) -->
+<div id="pwModal">
+  <div class="glass-card" style="width:90%; max-width:420px; text-align:center;">
+    <h3 style="font-family:'Orbitron'; color:var(--accent-cyan); margin-bottom:1.8rem; font-size:1.5rem; letter-spacing:2px;">AUTHENTICATION</h3>
+    <p style="color:var(--text-sub); margin-bottom:1.5rem; font-size:0.9rem;">관리자 터미널 접속을 위해 비밀번호를 입력하십시오.</p>
+    <input type="password" id="pwIn" class="admin-input"
+           style="text-align:center; font-size:1.8rem; letter-spacing:8px; padding:18px; margin-bottom:2.5rem; background:rgba(0,0,0,0.8);"
+           onkeydown="if(event.key==='Enter') XR.verifyAdmin()">
+    <div style="display:flex; gap:12px;">
+      <button class="btn-primary" style="display:block; flex:1; margin:0;" onclick="XR.verifyAdmin()">LOGIN</button>
+      <button class="btn-primary" style="display:block; flex:1; background:#334155; margin:0;" onclick="XR.closeModal()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   XR 네임스페이스 — 블로그스팟 전역 오염 방지
+   ════════════════════════════════════════════════ */
+var XR = (function() {
+
+  /* ── 비밀번호: 평문 비교 (btoa 환경 차이 제거) ── */
+  var ADMIN_PW = 'dmswk1004';
+  var DEF_Q    = '이미지 내의 기내 반입 금지 물품은?';
+  var QB       = [];
+  var state    = { idx: 0, score: 0, list: [], done: false };
+  var zoom     = { z: 1, px: 0, py: 0, isDrag: false, lx: 0, ly: 0 };
+  var editingId = null;
+  var retryStep = 0;
+  var currentImgId = '';
+
+  /* ─── 알림 토스트 ─── */
+  function notify(msg) {
+    var el = document.getElementById('customNotify');
+    if (!el) return;
+    el.innerText = msg;
+    el.style.display = 'block';
+    setTimeout(function() { el.style.display = 'none'; }, 2400);
+  }
+
+  /* ─── 화면 전환: 모달과 완전 분리 ─── */
+  function showScreen(id) {
+    var screens = document.querySelectorAll('#xray-app-root .screen');
+    for (var i = 0; i < screens.length; i++) {
+      screens[i].style.display = 'none';
+    }
+    var target = document.getElementById(id);
+    if (target) target.style.display = 'block';
+    window.scrollTo(0, 0);
+    resetZoom();
+  }
+
+  function openModal() {
+    var m = document.getElementById('pwModal');
+    if (m) m.style.display = 'flex';
+    var inp = document.getElementById('pwIn');
+    if (inp) { inp.value = ''; setTimeout(function(){ inp.focus(); }, 250); }
+  }
+
+  function closeModal() {
+    var m = document.getElementById('pwModal');
+    if (m) m.style.display = 'none';
+  }
+
+  /* ─── 홈으로 ─── */
+  function goHome() {
+    closeModal();
+    state = { idx: 0, score: 0, list: [], done: false }; // 상태 완전 초기화
+    showScreen('startScreen');
+  }
+
+  /* ─── 결과화면에서 바로 다시 풀기 ─── */
+  function restartQuiz() {
+    state = { idx: 0, score: 0, list: [], done: false };
+    startQuiz();
+  }
+
+  /* ══════════════════════════════════════════════════════
+     데이터 소스 전략:
+       방문자 → EMBEDDED_QB (HTML에 내장된 문제) 사용
+       관리자 → localStorage로 편집, "HTML 내보내기"로 배포
+     ══════════════════════════════════════════════════════ */
+
+  /* 관리자가 HTML 내보내기 시 이 배열에 문제가 주입됩니다 */
+  var EMBEDDED_QB = []; /* %%QUIZ_DATA%% */
+
+  function sync() {
+    try {
+      var saved = localStorage.getItem('XRAY_ADMIN_V3');
+      var adminQB = saved ? JSON.parse(saved) : null;
+      if (Array.isArray(adminQB) && adminQB.length > 0) {
+        QB = adminQB; // 관리자 모드: localStorage 우선
+      } else if (EMBEDDED_QB.length > 0) {
+        QB = EMBEDDED_QB; // 방문자 모드: 내장 데이터 사용
+      } else {
+        QB = [];
+      }
+    } catch(e) {
+      QB = EMBEDDED_QB.length > 0 ? EMBEDDED_QB : [];
+    }
+  }
+
+  function save() {
+    try { localStorage.setItem('XRAY_ADMIN_V3', JSON.stringify(QB)); } catch(e) {}
+  }
+
+  /* 관리자가 localStorage를 비우면 EMBEDDED_QB로 리셋 */
+  function resetToEmbedded() {
+    if (!confirm('관리자 편집 내용을 모두 지우고 배포된 문제로 초기화할까요?')) return;
+    localStorage.removeItem('XRAY_ADMIN_V3');
+    sync();
+    renderAdminList();
+    notify('초기화 완료 — 내장 문제 ' + QB.length + '개로 복원되었습니다.');
+  }
+
+  /* ════════════════════════════════════════════════════════
+     이미지 로딩 v3 — URL 직접 입력 우선 + 드라이브 다단계 폴백
+     + 타임아웃 감지 (CSP silent-block 대응)
+     ════════════════════════════════════════════════════════
+     저장 형식:
+       - 직접 URL (http/https 시작) → 그대로 사용
+       - 드라이브 공유 URL / ID     → ID 추출 후 다단계 시도
+     권장 이미지 호스팅 우선순위:
+       1) 블로거 글쓰기에서 업로드한 URL (blogger.googleusercontent.com) ✅
+       2) ImgBB (imgbb.com) 직접 링크 ✅
+       3) 구글 드라이브 (공유 설정 필수, 블로그스팟에서 간헐적 차단) ⚠️
+  */
+
+  var loadTimer = null; // 타임아웃 핸들러
+
+  function isDirectUrl(raw) {
+    return /^https?:\/\//i.test(raw) && raw.indexOf('drive.google.com') === -1 && raw.indexOf('docs.google.com') === -1;
+  }
+
+  function isBloggerUrl(raw) {
+    return raw.indexOf('blogger.googleusercontent.com') !== -1;
+  }
+
+  function extractDriveId(raw) {
+    if (!raw) return '';
+    var m = raw.match(/\/d\/([-\w]{25,})/);   if (m) return m[1];
+    m = raw.match(/[?&]id=([-\w]{25,})/);     if (m) return m[1];
+    m = raw.match(/^([-\w]{25,})$/);          if (m) return m[1];
+    return '';
+  }
+
+  /* 드라이브 ID → 시도 순서별 URL 생성
+     step 0: thumbnail API  (가장 가벼움, lh3 경유)
+     step 1: uc?id=         (리디렉션 방식)
+     step 2: uc?export=view (구형 방식)
+  */
+  function buildDriveSrc(id, step) {
+    switch(step) {
+      case 0: return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1200';
+      case 1: return 'https://drive.google.com/uc?id=' + id;
+      case 2: return 'https://drive.google.com/uc?export=view&id=' + id;
+      default: return '';
+    }
+  }
+
+  function loadImage(raw) {
+    raw = (raw || '').trim();
+    currentImgId = '';
+    retryStep    = 0;
+
+    var img      = document.getElementById('mainImg');
+    var loader   = document.getElementById('imgLoader');
+    var fallback = document.getElementById('imgFallback');
+    if (!img) return;
+
+    img.style.display    = 'none';
+    fallback.style.display = 'none';
+    loader.style.display = 'block';
+    loader.innerText     = '이미지 로딩 중...';
+
+    clearTimeout(loadTimer);
+
+    /* Base64 데이터 URL — 즉시 표시, 외부 요청 없음 */
+    if (/^data:image\//i.test(raw)) {
+      img.removeAttribute('crossorigin');
+      img.removeAttribute('referrerpolicy');
+      img.src = raw;
+      return; // onload가 처리
+    }
+
+    if (isDirectUrl(raw)) {
+      currentImgId = raw;
+      img.removeAttribute('crossorigin');
+      img.removeAttribute('src');
+
+      if (isBloggerUrl(raw)) {
+        /* blogger.googleusercontent.com: Referer를 블로거로 설정해야 로드됨 */
+        img.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+      } else {
+        /* ImgBB 등 일반 외부 URL: referrerpolicy 완전 제거 */
+        img.removeAttribute('referrerpolicy');
+      }
+      img.src = raw;
+      /* 직접 URL은 타임아웃 8초 */
+      loadTimer = setTimeout(function() {
+        if (img.style.display === 'none') showFallback('direct');
+      }, 8000);
+    } else {
+      /* ── 드라이브 모드 ── */
+      var id = extractDriveId(raw);
+      if (!id) { showFallback('invalid'); return; }
+      currentImgId = id;
+      tryDrive(img, 0);
+    }
+  }
+
+  function tryDrive(img, step) {
+    retryStep = step;
+    var src = buildDriveSrc(currentImgId, step);
+    if (!src) { showFallback('drive'); return; }
+
+    clearTimeout(loadTimer);
+    img.removeAttribute('src');
+    img.setAttribute('referrerpolicy', 'no-referrer');
+    /* crossorigin 제거: 블로그스팟에서 오히려 preflight 차단 유발 */
+    img.removeAttribute('crossorigin');
+    img.src = src;
+
+    /* 타임아웃 6초: CSP silent-block (onerror 미발화) 대응 */
+    loadTimer = setTimeout(function() {
+      if (img.style.display === 'none') {
+        if (retryStep < 2) {
+          tryDrive(img, retryStep + 1);
+        } else {
+          showFallback('drive');
+        }
+      }
+    }, 6000);
+  }
+
+  function onImgLoad() {
+    clearTimeout(loadTimer);
+    var img    = document.getElementById('mainImg');
+    var loader = document.getElementById('imgLoader');
+    if (img && loader) {
+      img.style.display    = 'block';
+      loader.style.display = 'none';
+    }
+  }
+
+  function onImgError() {
+    clearTimeout(loadTimer);
+    var img = document.getElementById('mainImg');
+    if (!img) return;
+
+    if (!currentImgId) { showFallback('drive'); return; }
+
+    /* 직접 URL 실패 */
+    if (isDirectUrl(currentImgId)) { showFallback('direct'); return; }
+
+    /* 드라이브 다음 단계 시도 */
+    if (retryStep < 2) {
+      tryDrive(img, retryStep + 1);
+    } else {
+      showFallback('drive');
+    }
+  }
+
+  function showFallback(type) {
+    clearTimeout(loadTimer);
+    var loader   = document.getElementById('imgLoader');
+    var fallback = document.getElementById('imgFallback');
+    var link     = document.getElementById('imgFallbackLink');
+    var msgEl    = document.getElementById('imgFallbackMsg');
+    if (loader)   loader.style.display   = 'none';
+    if (fallback) fallback.style.display = 'flex';
+
+    var msg  = '이미지를 불러올 수 없습니다.';
+    var href = '#';
+
+    if (type === 'drive') {
+      msg  = '드라이브 이미지 로드 실패.\n공유 설정을 "링크가 있는 모든 사용자"로 변경하거나\n직접 URL(ImgBB 등)을 사용해 주세요.';
+      href = 'https://drive.google.com/file/d/' + currentImgId + '/view';
+    } else if (type === 'direct') {
+      msg  = '이미지 주소에서 로드 실패.\nURL이 올바른지 확인해 주세요.';
+      href = currentImgId;
+    } else if (type === 'invalid') {
+      msg  = '유효하지 않은 이미지 주소입니다.\n드라이브 ID 또는 직접 URL을 입력해 주세요.';
+    }
+
+    if (msgEl)  msgEl.innerText = msg;
+    if (link)   link.href = href;
+  }
+
+  /* ─── 줌/패닝 ─── */
+  function resetZoom() {
+    zoom.z = 1; zoom.px = 0; zoom.py = 0;
+    updateZoom();
+  }
+
+  function updateZoom() {
+    var img = document.getElementById('mainImg');
+    if (img) img.style.transform = 'translate(' + zoom.px + 'px,' + zoom.py + 'px) scale(' + zoom.z + ')';
+  }
+
+  function doZoom(v) {
+    zoom.z = Math.min(Math.max(zoom.z + v, 1), 5);
+    if (zoom.z === 1) { zoom.px = 0; zoom.py = 0; }
+    updateZoom();
+  }
+
+  /* ─── 퀴즈 ─── */
+  function startQuiz() {
+    sync();
+    if (!QB || QB.length === 0) {
+      notify('등록된 문제가 없습니다. 관리자에게 문의하거나 HTML을 재배포해 주세요.');
+      return;
+    }
+    var shuffled = QB.slice();
+    for (var i = shuffled.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = tmp;
+    }
+    state = { idx: 0, score: 0, list: shuffled, done: false };
+    showScreen('quizScreen');
+    renderQ();
+  }
+
+  function renderQ() {
+    var q = state.list[state.idx];
+    if (!q) return;
+    var total = state.list.length;
+    state.done = false;
+
+    document.getElementById('progressFill').style.width = ((state.idx / total) * 100) + '%';
+    document.getElementById('qBadge').innerText = 'MISSION Q ' + (state.idx + 1) + ' / ' + total;
+    document.getElementById('qBody').innerText = q.text;
+
+    loadImage(q.image);
+
+    var opts = document.getElementById('optContainer');
+    opts.innerHTML = '';
+    q.options.forEach(function(o, i) {
+      var b = document.createElement('button');
+      b.className = 'btn-option';
+      b.innerHTML = '<span style="color:var(--accent-cyan);font-family:\'JetBrains Mono\';font-weight:900;font-size:1.2rem;">' + (i+1) + '</span> <span>' + escHtml(o) + '</span>';
+      (function(idx){ b.onclick = function(){ checkAns(idx); }; })(i);
+      opts.appendChild(b);
+    });
+
+    document.getElementById('feedbackBox').style.display = 'none';
+    document.getElementById('btnNext').style.display = 'none';
+  }
+
+  function checkAns(i) {
+    if (state.done) return;
+    state.done = true;
+    var q = state.list[state.idx];
+    var btns = document.querySelectorAll('.btn-option');
+    var correct = (i === q.answer);
+
+    for (var k = 0; k < btns.length; k++) {
+      btns[k].disabled = true;
+      if (k === q.answer) btns[k].classList.add('correct');
+      else if (k === i)   btns[k].classList.add('wrong');
+    }
+
+    if (correct) state.score += Math.ceil(100 / state.list.length);
+
+    var fbTitle = document.getElementById('fbTitle');
+    fbTitle.innerText = correct ? '✓ 판독 성공 (CORRECT)' : '✗ 판독 실패 (FAILED)';
+    fbTitle.style.color = correct ? 'var(--accent-green)' : 'var(--accent-red)';
+    document.getElementById('fbText').innerText = q.feedback || '등록된 판독 해설이 없습니다.';
+    document.getElementById('feedbackBox').style.display = 'block';
+    document.getElementById('btnNext').style.display = 'block';
+  }
+
+  function goNext() {
+    state.idx++;
+    if (state.idx >= state.list.length) {
+      showScreen('resultScreen');
+      document.getElementById('finalScore').innerText = Math.min(state.score, 100) + '점';
+    } else {
+      renderQ();
+    }
+  }
+
+  /* ─── 관리자 인증 ─── */
+  function openAdmin() { openModal(); }
+
+  function verifyAdmin() {
+    var inp = document.getElementById('pwIn');
+    if (!inp) return;
+    if (inp.value === ADMIN_PW) {
+      closeModal();
+      sync();
+      showScreen('adminScreen');
+      renderAdminList();
+      document.getElementById('inText').value = DEF_Q;
+    } else {
+      notify('인증 실패: 비밀번호가 틀립니다.');
+      inp.value = '';
+      inp.focus();
+    }
+  }
+
+  /* ─── 문제 등록/수정 ─── */
+  function getFormData() {
+    return {
+      text: document.getElementById('inText').value.trim(),
+      rawImg: document.getElementById('inImg').value.trim(),
+      opts: [
+        document.getElementById('o0').value.trim(),
+        document.getElementById('o1').value.trim(),
+        document.getElementById('o2').value.trim(),
+        document.getElementById('o3').value.trim()
+      ],
+      ans: parseInt(document.getElementById('inAns').value, 10),
+      fb: document.getElementById('inFb').value.trim()
+    };
+  }
+
+  function addOrUpdate() {
+    var d = getFormData();
+    /* 우선순위: 1) 파일 업로드 Base64, 2) 직접 URL, 3) 드라이브 ID */
+    var imgVal = '';
+    if (pendingBase64) {
+      imgVal = pendingBase64;
+    } else if (isDirectUrl(d.rawImg)) {
+      imgVal = d.rawImg;
+    } else {
+      imgVal = extractDriveId(d.rawImg);
+    }
+
+    if (!d.text || !imgVal || d.opts.some(function(o){ return o === ''; })) {
+      notify('모든 판독 데이터를 입력해 주세요.');
+      return;
+    }
+
+    if (editingId !== null) {
+      /* 수정 모드 */
+      var idx = -1;
+      for (var i = 0; i < QB.length; i++) {
+        if (String(QB[i].id) === String(editingId)) { idx = i; break; }
+      }
+      if (idx !== -1) {
+        QB[idx].text     = d.text;
+        QB[idx].image    = imgVal;
+        QB[idx].options  = d.opts;
+        QB[idx].answer   = d.ans;
+        QB[idx].feedback = d.fb;
+        notify('판독 데이터가 수정되었습니다.');
+      }
+    } else {
+      /* 새 등록 */
+      QB.push({ id: 'id-' + Date.now(), text: d.text, image: imgVal, options: d.opts, answer: d.ans, feedback: d.fb });
+      notify('새 데이터가 시스템에 등록되었습니다.');
+    }
+
+    save();
+    resetForm();
+  }
+
+  function editQ(id) {
+    var q = null;
+    for (var i = 0; i < QB.length; i++) {
+      if (String(QB[i].id) === String(id)) { q = QB[i]; break; }
+    }
+    if (!q) return;
+
+    editingId = id;
+    document.getElementById('inText').value = q.text;
+    document.getElementById('inImg').value  = q.image;
+    document.getElementById('o0').value     = q.options[0] || '';
+    document.getElementById('o1').value     = q.options[1] || '';
+    document.getElementById('o2').value     = q.options[2] || '';
+    document.getElementById('o3').value     = q.options[3] || '';
+    document.getElementById('inAns').value  = q.answer;
+    document.getElementById('inFb').value   = q.feedback || '';
+    document.getElementById('adminFormTitle').innerText = '데이터 수정 (Edit Mode)';
+    document.getElementById('btnSave').innerText = '변경사항 업데이트';
+    document.getElementById('btnCancel').style.display = 'block';
+
+    var formTop = document.getElementById('adminFormArea');
+    if (formTop) window.scrollTo(0, formTop.getBoundingClientRect().top + window.scrollY - 80);
+  }
+
+  function cancelEdit() {
+    editingId = null;
+    resetForm();
+  }
+
+  /* ─── 파일 업로드 → Base64 변환 ─── */
+  var pendingBase64 = ''; // 업로드된 이미지 Base64 임시 저장
+
+  function handleFileUpload(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+
+    // 5MB 초과 경고
+    if (file.size > 5 * 1024 * 1024) {
+      notify('파일이 너무 큽니다. 5MB 이하로 압축 후 업로드해 주세요.');
+      input.value = '';
+      return;
+    }
+
+    var label = document.getElementById('fileUploadLabel');
+    if (label) label.querySelector('span').innerText = '⏳ 변환 중...';
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      pendingBase64 = e.target.result; // data:image/png;base64,xxxx
+      // 미리보기
+      var preview = document.getElementById('imgPreview');
+      var wrap    = document.getElementById('imgPreviewWrap');
+      if (preview) preview.src = pendingBase64;
+      if (wrap)    wrap.style.display = 'block';
+      // URL 입력란 비우기
+      document.getElementById('inImg').value = '';
+      if (label) label.querySelector('span').innerText = '✅ ' + file.name;
+      notify('이미지 변환 완료! 저장 버튼을 눌러주세요.');
+    };
+    reader.onerror = function() {
+      notify('파일 읽기 실패. 다시 시도해 주세요.');
+      if (label) label.querySelector('span').innerText = '📁 파일 선택 (jpg/png)';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetForm() {
+    editingId = null;
+    document.getElementById('inText').value = DEF_Q;
+    document.getElementById('inImg').value  = '';
+    document.getElementById('o0').value     = '';
+    document.getElementById('o1').value     = '';
+    document.getElementById('o2').value     = '';
+    document.getElementById('o3').value     = '';
+    document.getElementById('inAns').value  = '0';
+    document.getElementById('inFb').value   = '';
+    document.getElementById('adminFormTitle').innerText = '새 문제 데이터 등록';
+    document.getElementById('btnSave').innerText = '💾 라이브러리 저장';
+    document.getElementById('btnCancel').style.display = 'none';
+    // 파일 업로드 초기화
+    pendingBase64 = '';
+    var fileInput = document.getElementById('inImgFile');
+    if (fileInput) fileInput.value = '';
+    var label = document.getElementById('fileUploadLabel');
+    if (label) label.querySelector('span').innerText = '📁 파일 선택 (jpg/png)';
+    var wrap = document.getElementById('imgPreviewWrap');
+    if (wrap) wrap.style.display = 'none';
+    renderAdminList();
+  }
+
+  function delQ(id) {
+    if (!confirm('이 데이터를 영구 삭제할까요?')) return;
+    QB = QB.filter(function(q){ return String(q.id) !== String(id); });
+    save();
+    renderAdminList();
+  }
+
+  function renderAdminList() {
+    var l = document.getElementById('adminList');
+    if (!l) return;
+    l.innerHTML = '<h3 style="margin:2.5rem 0 1.2rem; color:var(--accent-cyan); font-size:1.2rem; border-left:4px solid var(--accent-cyan); padding-left:15px;">등록 라이브러리 목록 (' + QB.length + ')</h3>';
+
+    var reversed = QB.slice().reverse();
+    reversed.forEach(function(q) {
+      var d = document.createElement('div');
+      d.style.cssText = 'background:rgba(255,255,255,0.03);padding:1.4rem;border-radius:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border);gap:12px;';
+      d.innerHTML =
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="font-weight:700;font-size:1rem;margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(q.text) + '</div>' +
+          '<div style="font-size:0.75rem;color:var(--text-sub);font-family:\'JetBrains Mono\';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">ID: ' + q.image + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:10px;flex-shrink:0;">' +
+          '<button style="background:var(--accent-purple);color:white;border:none;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:800;" data-edit="' + escHtml(String(q.id)) + '">수정</button>' +
+          '<button style="background:rgba(239,68,68,0.2);color:var(--accent-red);border:1px solid var(--accent-red);padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:800;" data-del="' + escHtml(String(q.id)) + '">삭제</button>' +
+        '</div>';
+      l.appendChild(d);
+    });
+
+    /* 이벤트 위임: inline onclick 대신 data-attribute 방식 (XSS 방지) */
+    l.onclick = function(e) {
+      var t = e.target;
+      if (t.dataset.edit) editQ(t.dataset.edit);
+      if (t.dataset.del)  delQ(t.dataset.del);
+    };
+  }
+
+  /* ─── 데이터 내보내기 / 가져오기 ─── */
+  function exportData() {
+    sync();
+    if (!QB || QB.length === 0) { notify('내보낼 문제가 없습니다.'); return; }
+
+    /* 현재 HTML 소스를 가져와서 EMBEDDED_QB 자리에 문제 데이터를 주입 */
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', location.href, true);
+    xhr.onload = function() {
+      var src = xhr.responseText;
+      /* %%QUIZ_DATA%% 플레이스홀더 위치에 실제 데이터 삽입 */
+      var dataStr = JSON.stringify(QB);
+      var injected = src.replace(
+        /var EMBEDDED_QB = \[\]; \/\* %%QUIZ_DATA%% \*\//,
+        'var EMBEDDED_QB = ' + dataStr + '; /* EMBEDDED */'
+      );
+      if (injected === src) {
+        /* 이미 데이터가 내장된 버전인 경우 — EMBEDDED 주석 찾아서 교체 */
+        injected = src.replace(
+          /var EMBEDDED_QB = \[.*?\]; \/\* EMBEDDED \*\//s,
+          'var EMBEDDED_QB = ' + dataStr + '; /* EMBEDDED */'
+        );
+      }
+      var blob = new Blob([injected], { type: 'text/html;charset=utf-8' });
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'xray_cbt_published.html';
+      a.click();
+      URL.revokeObjectURL(url);
+      notify('✅ ' + QB.length + '개 문제가 내장된 HTML이 다운로드되었습니다!');
+    };
+    xhr.onerror = function() {
+      /* XHR 실패 시(로컬파일 등) — 직접 현재 소스 복사 불가, JSON만 제공 */
+      notify('⚠️ HTML 직접 내보내기 실패. JSON으로 대신 내보냅니다.');
+      exportJSON();
+    };
+    xhr.send();
+  }
+
+  function exportJSON() {
+    sync();
+    if (!QB || QB.length === 0) { notify('내보낼 문제가 없습니다.'); return; }
+    var json = JSON.stringify(QB, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'xray_quiz_data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    notify('JSON 파일 다운로드 완료');
+  }
+
+  function importData(input) {
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var data = JSON.parse(e.target.result);
+        if (!Array.isArray(data)) throw new Error('배열 형식이 아닙니다.');
+        // 기존 데이터와 병합 (id 중복 제거)
+        var existingIds = QB.map(function(q){ return q.id; });
+        var added = 0;
+        data.forEach(function(q) {
+          if (q.id && existingIds.indexOf(q.id) === -1) {
+            QB.push(q); added++;
+          }
+        });
+        save();
+        renderAdminList();
+        notify(added + '개 문제를 가져왔습니다!');
+      } catch(err) {
+        notify('파일 오류: 올바른 JSON 파일인지 확인해 주세요.');
+      }
+      input.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  /* ─── 이스케이프 유틸 ─── */
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ─── 이미지 드래그/패닝 초기화 ─── */
+  function initDrag() {
+    var box = document.getElementById('imgBox');
+    if (!box) return;
+
+    box.addEventListener('mousedown', function(e) {
+      if (zoom.z > 1) { zoom.isDrag = true; zoom.lx = e.clientX; zoom.ly = e.clientY; }
+    });
+    window.addEventListener('mousemove', function(e) {
+      if (!zoom.isDrag) return;
+      zoom.px += e.clientX - zoom.lx; zoom.py += e.clientY - zoom.ly;
+      zoom.lx = e.clientX; zoom.ly = e.clientY;
+      updateZoom();
+    });
+    window.addEventListener('mouseup', function() { zoom.isDrag = false; });
+
+    box.addEventListener('touchstart', function(e) {
+      if (zoom.z > 1) { zoom.isDrag = true; zoom.lx = e.touches[0].clientX; zoom.ly = e.touches[0].clientY; }
+    });
+    window.addEventListener('touchmove', function(e) {
+      if (!zoom.isDrag) return;
+      zoom.px += e.touches[0].clientX - zoom.lx; zoom.py += e.touches[0].clientY - zoom.ly;
+      zoom.lx = e.touches[0].clientX; zoom.ly = e.touches[0].clientY;
+      updateZoom();
+    });
+    window.addEventListener('touchend', function() { zoom.isDrag = false; });
+  }
+
+  /* ─── 초기화 ─── */
+  function init() {
+    sync();
+    showScreen('startScreen');
+    initDrag();
+  }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(init, 0);
+  } else {
+    document.addEventListener('DOMContentLoaded', init);
+  }
+
+  /* ─── 공개 API ─── */
+  return {
+    goHome:       goHome,
+    startQuiz:    startQuiz,
+    goNext:       goNext,
+    checkAns:     checkAns,
+    doZoom:       doZoom,
+    resetZoom:    resetZoom,
+    onImgLoad:    onImgLoad,
+    onImgError:   onImgError,
+    openAdmin:    openAdmin,
+    verifyAdmin:  verifyAdmin,
+    addOrUpdate:  addOrUpdate,
+    editQ:        editQ,
+    cancelEdit:   cancelEdit,
+    delQ:         delQ,
+    closeModal:      closeModal,
+    handleFileUpload: handleFileUpload,
+    restartQuiz:      restartQuiz,
+    exportData:       exportData,
+    exportJSON:       exportJSON,
+    importData:       importData,
+    resetToEmbedded:  resetToEmbedded
+  };
+})();
+</script>
+</div>
+</body>
+</html>
