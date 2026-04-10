@@ -222,13 +222,13 @@
 
   @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 </style>
-<script type="text/javascript" nonce="d12548d3bd04410bae7bd4ace60" src="//local.adguard.org?ts=1775215270059&amp;type=content-script&amp;dmn=pkw1101-ai.github.io&amp;url=https%3A%2F%2Fpkw1101-ai.github.io%2Fxray-cbt%2F&amp;app=comet.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="d12548d3bd04410bae7bd4ace60" src="//local.adguard.org?ts=1775215270059&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script><script type="text/javascript" nonce="d12548d3bd04410bae7bd4ace60" src="//local.adguard.org?ts=1775215270059&amp;type=content-script&amp;dmn=pkw1101-ai.github.io&amp;url=https%3A%2F%2Fpkw1101-ai.github.io%2Fxray-cbt%2F&amp;app=comet.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1"></script><script type="text/javascript" nonce="d12548d3bd04410bae7bd4ace60" src="//local.adguard.org?ts=1775215270059&amp;name=AdGuard%20Extra&amp;name=AdGuard%20Popup%20Blocker&amp;type=user-script"></script></head>
+</head>
 <body>
 <div id="xray-app-root">
 <div id="customNotify"></div>
 
 <header>
-  <div class="logo" onclick="XR.goHome()"><div class="logo-dot"></div>SECURITY X-RAY INTERPRETATION</div>
+  <div class="logo" onclick="_xr('goHome')"><div class="logo-dot"></div>SECURITY X-RAY INTERPRETATION</div>
 </header>
 
 <main>
@@ -243,7 +243,7 @@
       <h2 style="font-family:'Orbitron'; color:var(--accent-cyan); font-size:2.2rem; margin-bottom:1rem; letter-spacing:1px;">READY FOR SESSION</h2>
       <p style="color:var(--text-sub); margin-bottom:3rem; font-size:1.1rem; font-weight:500;">기내 반입 금지 물품에 대한 정밀 판독 훈련을 시작합니다.</p>
 
-      <button class="btn-option" onclick="XR.startQuiz()" style="padding:3rem 2rem; flex-direction:column; align-items:center; border:2px solid var(--accent-cyan); background:rgba(14,165,233,0.06); gap:1.5rem; border-radius:30px;">
+      <button class="btn-option" onclick="_xr('startQuiz')" style="padding:3rem 2rem; flex-direction:column; align-items:center; border:2px solid var(--accent-cyan); background:rgba(14,165,233,0.06); gap:1.5rem; border-radius:30px;">
         <span style="font-size:4rem;">🔍</span>
         <div style="text-align:center;">
           <strong style="font-size:1.7rem; display:block; margin-bottom:8px;">판독 훈련 세션 시작</strong>
@@ -283,9 +283,9 @@
           </div>
         </div>
         <div class="zoom-box">
-          <button class="btn-zoom" onclick="XR.doZoom(0.5)">+</button>
-          <button class="btn-zoom" onclick="XR.doZoom(-0.5)">−</button>
-          <button class="btn-zoom" onclick="XR.resetZoom()">⟲</button>
+          <button class="btn-zoom" onclick="_xr('doZoom',[0.5])">+</button>
+          <button class="btn-zoom" onclick="_xr('doZoom',[-0.5])">−</button>
+          <button class="btn-zoom" onclick="_xr('resetZoom')">⟲</button>
         </div>
       </div>
 
@@ -297,7 +297,7 @@
         <div style="margin-top:1.5rem; display:inline-block; padding:10px 22px; background:rgba(139,92,246,0.12); border-radius:12px; color:var(--accent-purple); font-weight:900; font-size:0.9rem; letter-spacing:1px;">✨ 전문가 인공지능 분석 가이드 지원됨</div>
       </div>
 
-      <button id="btnNext" class="btn-primary" onclick="XR.goNext()">다음 판독 단계로 이동 →</button>
+      <button id="btnNext" class="btn-primary" onclick="_xr('goNext')">다음 판독 단계로 이동 →</button>
     </div>
   </div>
 
@@ -307,7 +307,7 @@
       <h2 style="font-family:'Orbitron'; color:var(--accent-cyan); font-size:2.8rem; margin-bottom:1rem; letter-spacing:2px;">MISSION CLEAR</h2>
       <div id="finalScore" class="score-display">00점</div>
       <p style="color:var(--text-sub); margin-bottom:3.5rem; font-size:1.3rem; font-weight:600;">실전 판독 세션을 성공적으로 완료하였습니다.</p>
-      <button class="btn-primary" style="display:block; margin-bottom:2.5rem; font-size:1.4rem;" onclick="XR.restartQuiz()">🔄 다시 풀기 (Restart)</button>
+      <button class="btn-primary" style="display:block; margin-bottom:2.5rem; font-size:1.4rem;" onclick="_xr('restartQuiz')">🔄 다시 풀기 (Restart)</button>
       <div class="ebook-promo" style="border-color:rgba(139,92,246,0.4); background:rgba(139,92,246,0.04);">
         <p style="color:var(--accent-purple); font-size:1.2rem; font-weight:900;">판독 정확도 상위 1%가 되는 가장 빠른 길</p>
         <a href="https://litt.ly/xraycbt" target="_blank" class="ebook-btn" style="background:var(--accent-purple);">비법서 바로 확인하기 →</a>
@@ -320,7 +320,7 @@
     <div class="glass-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2.5rem;">
         <h2 style="color:var(--accent-cyan); font-family:'Orbitron'; font-size:1.6rem;">CORE ADMIN</h2>
-        <button class="btn-zoom" style="width:auto; padding:0 22px; font-size:0.9rem; font-weight:800; border-radius:15px;" onclick="XR.goHome()">EXIT</button>
+        <button class="btn-zoom" style="width:auto; padding:0 22px; font-size:0.9rem; font-weight:800; border-radius:15px;" onclick="_xr('goHome')">EXIT</button>
       </div>
       <div id="adminFormArea">
         <h3 id="adminFormTitle" style="margin-bottom:1.5rem; color:white; font-size:1.3rem; font-weight:800;">새 문제 데이터 등록</h3>
@@ -363,8 +363,8 @@
         <textarea id="inFb" class="admin-input" style="height:110px;" placeholder="판독 포인트 및 정답 해설을 입력하세요"></textarea>
 
         <div style="display:flex; gap:12px;">
-          <button id="btnSave" class="btn-primary" style="display:block; flex:2; margin-top:10px;" onclick="XR.addOrUpdate()">💾 라이브러리 저장</button>
-          <button id="btnCancel" class="btn-primary" style="background:#475569; margin-top:10px; display:none; flex:1;" onclick="XR.cancelEdit()">✕ 취소</button>
+          <button id="btnSave" class="btn-primary" style="display:block; flex:2; margin-top:10px;" onclick="_xr('addOrUpdate')">💾 라이브러리 저장</button>
+          <button id="btnCancel" class="btn-primary" style="background:#475569; margin-top:10px; display:none; flex:1;" onclick="_xr('cancelEdit')">✕ 취소</button>
         </div>
       </div>
       <div id="adminList" style="margin-top:2rem;"></div>
@@ -377,10 +377,10 @@
           <span style="font-size:0.8rem;">방문자는 별도 설치 없이 문제가 자동으로 보입니다.</span>
         </div>
         <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
-          <button onclick="XR.exportData()" style="flex:2; min-width:180px; padding:16px; border-radius:14px; background:var(--accent-purple); color:white; border:none; font-weight:800; cursor:pointer; font-size:1.05rem;">
+          <button onclick="_xr('exportData')" style="flex:2; min-width:180px; padding:16px; border-radius:14px; background:var(--accent-purple); color:white; border:none; font-weight:800; cursor:pointer; font-size:1.05rem;">
             🌐 HTML 내보내기 (방문자 배포용)
           </button>
-          <button onclick="XR.exportJSON()" style="flex:1; min-width:120px; padding:16px; border-radius:14px; background:rgba(255,255,255,0.05); color:var(--text-sub); border:1px solid var(--border); font-weight:700; cursor:pointer; font-size:0.9rem;">
+          <button onclick="_xr('exportJSON')" style="flex:1; min-width:120px; padding:16px; border-radius:14px; background:rgba(255,255,255,0.05); color:var(--text-sub); border:1px solid var(--border); font-weight:700; cursor:pointer; font-size:0.9rem;">
             💾 JSON 백업
           </button>
         </div>
@@ -389,7 +389,7 @@
             📂 JSON 복원
             <input type="file" accept=".json" style="display:none;" onchange="XR.importData(this)">
           </label>
-          <button onclick="XR.resetToEmbedded()" style="flex:1; min-width:140px; padding:14px; border-radius:14px; background:rgba(239,68,68,0.08); color:var(--accent-red); border:1px solid rgba(239,68,68,0.2); font-weight:700; cursor:pointer; font-size:0.9rem;">
+          <button onclick="_xr('resetToEmbedded')" style="flex:1; min-width:140px; padding:14px; border-radius:14px; background:rgba(239,68,68,0.08); color:var(--accent-red); border:1px solid rgba(239,68,68,0.2); font-weight:700; cursor:pointer; font-size:0.9rem;">
             ↺ 내장 문제로 초기화
           </button>
         </div>
@@ -399,7 +399,7 @@
 </main>
 
 <!-- 관리자 접근 링크 -->
-<div class="admin-link" onclick="XR.openAdmin()">ACCESS SECURE TERMINAL</div>
+<div class="admin-link" onclick="_xr('openAdmin')">ACCESS SECURE TERMINAL</div>
 
 <!-- 비밀번호 모달 (screen 클래스와 완전 분리) -->
 <div id="pwModal">
@@ -410,8 +410,8 @@
            style="text-align:center; font-size:1.8rem; letter-spacing:8px; padding:18px; margin-bottom:2.5rem; background:rgba(0,0,0,0.8);"
            onkeydown="if(event.key==='Enter') XR.verifyAdmin()">
     <div style="display:flex; gap:12px;">
-      <button class="btn-primary" style="display:block; flex:1; margin:0;" onclick="XR.verifyAdmin()">LOGIN</button>
-      <button class="btn-primary" style="display:block; flex:1; background:#334155; margin:0;" onclick="XR.closeModal()">CANCEL</button>
+      <button class="btn-primary" style="display:block; flex:1; margin:0;" onclick="_xr('verifyAdmin')">LOGIN</button>
+      <button class="btn-primary" style="display:block; flex:1; background:#334155; margin:0;" onclick="_xr('closeModal')">CANCEL</button>
     </div>
   </div>
 </div>
@@ -420,6 +420,21 @@
 /* ════════════════════════════════════════════════
    XR 네임스페이스 — 블로그스팟 전역 오염 방지
    ════════════════════════════════════════════════ */
+
+/* 안전 래퍼: XR 로딩 전 클릭 이벤트 보호 */
+function _xr(fn, args) {
+  var call = function() {
+    if (typeof XR !== "undefined" && typeof XR[fn] === "function") {
+      XR[fn].apply(null, args !== undefined ? args : []);
+    }
+  };
+  if (typeof XR !== "undefined") {
+    call();
+  } else {
+    window.addEventListener("load", call);
+  }
+}
+
 var XR = (function() {
 
   /* ── 비밀번호: 평문 비교 (btoa 환경 차이 제거) ── */
@@ -509,7 +524,7 @@ var XR = (function() {
 
   /* 관리자가 localStorage를 비우면 EMBEDDED_QB로 리셋 */
   function resetToEmbedded() {
-    if (!confirm('관리자 편집 내용을 모두 지우고 배포된 문제로 초기화할까요?')) return;
+    /* confirm 대신 바로 실행 */
     localStorage.removeItem('XRAY_ADMIN_V3');
     sync();
     renderAdminList();
@@ -731,7 +746,7 @@ var XR = (function() {
     state.done = false;
 
     document.getElementById('progressFill').style.width = ((state.idx / total) * 100) + '%';
-    document.getElementById('qBadge').innerText = 'MISSION Q ' + (state.idx + 1) + ' / ' + total;
+    document.getElementById('qBadge').innerText = 'Q ' + (state.idx + 1) + ' / ' + total;
     document.getElementById('qBody').innerText = q.text;
 
     loadImage(q.image);
@@ -746,8 +761,13 @@ var XR = (function() {
       opts.appendChild(b);
     });
 
-    document.getElementById('feedbackBox').style.display = 'none';
-    document.getElementById('btnNext').style.display = 'none';
+    /* 선택지 보이기, 피드백 패널 숨기기 */
+    var optContainer = document.getElementById('optContainer');
+    var feedbackPanel = document.getElementById('feedbackPanel');
+    var btnNext = document.getElementById('btnNext');
+    if (optContainer) optContainer.style.display = 'grid';
+    if (feedbackPanel) feedbackPanel.style.display = 'none';
+    if (btnNext) btnNext.style.display = 'none';
   }
 
   function checkAns(i) {
@@ -765,12 +785,22 @@ var XR = (function() {
 
     if (correct) state.score += Math.ceil(100 / state.list.length);
 
-    var fbTitle = document.getElementById('fbTitle');
-    fbTitle.innerText = correct ? '✓ 판독 성공 (CORRECT)' : '✗ 판독 실패 (FAILED)';
-    fbTitle.style.color = correct ? 'var(--accent-green)' : 'var(--accent-red)';
-    document.getElementById('fbText').innerText = q.feedback || '등록된 판독 해설이 없습니다.';
-    document.getElementById('feedbackBox').style.display = 'block';
-    document.getElementById('btnNext').style.display = 'block';
+    /* 오른쪽 패널: 선택지 숨기고 피드백 표시 */
+    var optContainer = document.getElementById('optContainer');
+    var feedbackPanel = document.getElementById('feedbackPanel');
+    var fbResult = document.getElementById('fbResult');
+    var fbText = document.getElementById('fbText');
+    var btnNext = document.getElementById('btnNext');
+
+    if (optContainer) optContainer.style.display = 'none';
+    if (feedbackPanel) feedbackPanel.style.display = 'flex';
+
+    if (fbResult) {
+      fbResult.className = 'feedback-result ' + (correct ? 'correct' : 'wrong');
+      fbResult.innerText = correct ? '✓ 판독 성공 (CORRECT)' : '✗ 판독 실패 (FAILED)';
+    }
+    if (fbText) fbText.innerText = q.feedback || '등록된 판독 해설이 없습니다.';
+    if (btnNext) btnNext.style.display = 'block';
   }
 
   function goNext() {
@@ -950,10 +980,15 @@ var XR = (function() {
   }
 
   function delQ(id) {
-    if (!confirm('이 데이터를 영구 삭제할까요?')) return;
-    QB = QB.filter(function(q){ return String(q.id) !== String(id); });
+    var q = null;
+    for (var i = 0; i < QB.length; i++) {
+      if (String(QB[i].id) === String(id)) { q = QB[i]; break; }
+    }
+    var label = q ? q.text.slice(0, 20) : '문제';
+    QB = QB.filter(function(item){ return String(item.id) !== String(id); });
     save();
     renderAdminList();
+    notify('"' + label + '" 삭제 완료');
   }
 
   function renderAdminList() {
@@ -977,9 +1012,10 @@ var XR = (function() {
       l.appendChild(d);
     });
 
-    /* 이벤트 위임: inline onclick 대신 data-attribute 방식 (XSS 방지) */
+    /* 이벤트 위임: closest()로 텍스트 노드 클릭도 처리 */
     l.onclick = function(e) {
-      var t = e.target;
+      var t = e.target.closest ? e.target.closest('[data-edit],[data-del]') : e.target;
+      if (!t) return;
       if (t.dataset.edit) editQ(t.dataset.edit);
       if (t.dataset.del)  delQ(t.dataset.del);
     };
