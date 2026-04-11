@@ -221,6 +221,74 @@
   }
 
   @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── 좌우 분할 퀴즈 레이아웃 ── */
+  .quiz-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .quiz-left { display: flex; flex-direction: column; }
+  .quiz-right { display: flex; flex-direction: column; }
+
+  .right-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.8rem;
+  }
+
+  .quiz-layout .image-container { height: 360px; margin-bottom: 0; }
+
+  .feedback-panel {
+    display: none;
+    flex-direction: column;
+    gap: 1rem;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .feedback-result {
+    font-size: 1.3rem; font-weight: 900; padding: 1rem;
+    border-radius: 14px; text-align: center;
+  }
+  .feedback-result.correct {
+    background: rgba(16,185,129,0.15);
+    border: 1px solid var(--accent-green); color: #6ee7b7;
+  }
+  .feedback-result.wrong {
+    background: rgba(239,68,68,0.15);
+    border: 1px solid var(--accent-red); color: #fca5a5;
+  }
+  .feedback-text {
+    color: var(--text-main); font-size: 1rem; line-height: 1.7;
+    word-break: keep-all; padding: 1rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px; border: 1px solid var(--border);
+  }
+  .ai-badge {
+    display: inline-block; padding: 8px 16px;
+    background: rgba(139,92,246,0.12); border-radius: 10px;
+    color: var(--accent-purple); font-weight: 900;
+    font-size: 0.82rem; text-align: center;
+  }
+  .btn-next-inline {
+    width: 100%; padding: 1.2rem; border-radius: 16px;
+    background: var(--accent-cyan); color: #fff; border: none;
+    font-weight: 800; font-size: 1.1rem; cursor: pointer;
+    box-shadow: 0 10px 25px rgba(14,165,233,0.25); display: none;
+  }
+  .btn-next-inline:hover { filter: brightness(1.15); transform: translateY(-2px); }
+
+  @media (max-width: 700px) {
+    .quiz-layout { grid-template-columns: 1fr; }
+    .quiz-layout .image-container { height: 260px; }
+    .right-panel { min-height: auto; }
+  }
 </style>
 </head>
 <body>
@@ -260,44 +328,44 @@
 
   <!-- 2. 퀴즈 화면 -->
   <div id="quizScreen" class="screen">
-    <div style="width:100%; height:10px; background:rgba(255,255,255,0.03); border-radius:10px; margin-bottom:3rem; overflow:hidden; border:1px solid var(--border);">
+    <div style="width:100%; height:8px; background:rgba(255,255,255,0.03); border-radius:10px; margin-bottom:1.2rem; overflow:hidden; border:1px solid var(--border);">
       <div id="progressFill" style="height:100%; background:linear-gradient(90deg, var(--accent-cyan), var(--accent-purple)); width:0%; transition: width 0.5s ease;"></div>
     </div>
-    <div class="glass-card">
-      <div class="score-badge" id="qBadge">MISSION Q 1 / 1</div>
-      <div id="qBody" class="q-text"></div>
-
-      <div class="image-container" id="imgBox">
-        <div id="imgLoader" class="loader-text">이미지 분석 중...</div>
-        <img id="mainImg" src="" alt="CBT Target"
-             onload="XR.onImgLoad()" onerror="XR.onImgError()">
-        <!-- 이미지 로드 실패 안내 -->
-        <div class="img-fallback-wrap" id="imgFallback">
-          <div style="color:var(--accent-red); font-weight:800; font-size:1.1rem;">⚠️ 이미지 로드 실패</div>
-          <small id="imgFallbackMsg" style="color:var(--text-sub); margin-top:10px; display:block; line-height:1.8; white-space:pre-line; font-size:0.88rem;"></small>
-          <a id="imgFallbackLink" href="#" target="_blank" style="color:var(--accent-cyan); font-size:0.9rem; margin-top:6px;">이미지 직접 열기 →</a>
-          <div style="margin-top:1.2rem; padding:10px 16px; background:rgba(14,165,233,0.08); border-radius:10px; font-size:0.82rem; color:var(--text-sub); line-height:1.8; text-align:left;">
-            💡 <b style="color:var(--accent-cyan);">권장 이미지 호스팅</b><br>
-            ① 블로거 글쓰기에서 직접 업로드 후 URL 복사<br>
-            ② <a href="https://imgbb.com" target="_blank" style="color:var(--accent-cyan);">imgbb.com</a> 업로드 후 Direct Link 사용
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.2rem; flex-wrap:wrap;">
+      <span id="qBadge" style="background:var(--accent-green); color:#fff; padding:5px 16px; border-radius:20px; font-size:0.82rem; font-weight:900; font-family:'Orbitron'; white-space:nowrap; flex-shrink:0;">Q 1/1</span>
+      <div id="qBody" style="font-size:1.15rem; font-weight:700; color:#fff; word-break:keep-all; line-height:1.5;"></div>
+    </div>
+    <div class="quiz-layout">
+      <!-- 왼쪽: 이미지 -->
+      <div class="quiz-left">
+        <div class="image-container" id="imgBox">
+          <div id="imgLoader" class="loader-text">이미지 분석 중...</div>
+          <img id="mainImg" src="" alt="CBT Target"
+               onload="_xr('onImgLoad')" onerror="_xr('onImgError')">
+          <div class="img-fallback-wrap" id="imgFallback">
+            <div style="color:var(--accent-red); font-weight:800; font-size:1rem;">⚠️ 이미지 로드 실패</div>
+            <small id="imgFallbackMsg" style="color:var(--text-sub); margin-top:8px; display:block; line-height:1.7; white-space:pre-line; font-size:0.82rem;"></small>
+            <a id="imgFallbackLink" href="#" target="_blank" style="color:var(--accent-cyan); font-size:0.85rem; margin-top:6px;">이미지 직접 열기 →</a>
+          </div>
+          <div class="zoom-box">
+            <button class="btn-zoom" onclick="_xr('doZoom',[0.5])">+</button>
+            <button class="btn-zoom" onclick="_xr('doZoom',[-0.5])">−</button>
+            <button class="btn-zoom" onclick="_xr('resetZoom')">⟲</button>
           </div>
         </div>
-        <div class="zoom-box">
-          <button class="btn-zoom" onclick="_xr('doZoom',[0.5])">+</button>
-          <button class="btn-zoom" onclick="_xr('doZoom',[-0.5])">−</button>
-          <button class="btn-zoom" onclick="_xr('resetZoom')">⟲</button>
+      </div>
+      <!-- 오른쪽: 선택지 or 피드백 -->
+      <div class="quiz-right">
+        <div class="right-panel">
+          <div id="optContainer" class="option-list"></div>
+          <div id="feedbackPanel" class="feedback-panel">
+            <div id="fbResult" class="feedback-result"></div>
+            <div id="fbText" class="feedback-text"></div>
+            <div class="ai-badge">✨ 전문가 인공지능 분석 가이드 지원됨</div>
+            <button class="btn-next-inline" id="btnNext" onclick="_xr('goNext')">다음 판독 단계로 이동 →</button>
+          </div>
         </div>
       </div>
-
-      <div id="optContainer" class="option-list"></div>
-
-      <div id="feedbackBox" class="feedback-area">
-        <h4 id="fbTitle" style="font-size:1.5rem; margin-bottom:0.8rem; font-weight:900;"></h4>
-        <p id="fbText" style="color:var(--text-main); font-size:1.2rem; line-height:1.6; word-break:keep-all;"></p>
-        <div style="margin-top:1.5rem; display:inline-block; padding:10px 22px; background:rgba(139,92,246,0.12); border-radius:12px; color:var(--accent-purple); font-weight:900; font-size:0.9rem; letter-spacing:1px;">✨ 전문가 인공지능 분석 가이드 지원됨</div>
-      </div>
-
-      <button id="btnNext" class="btn-primary" onclick="_xr('goNext')">다음 판독 단계로 이동 →</button>
     </div>
   </div>
 
@@ -785,22 +853,20 @@ var XR = (function() {
 
     if (correct) state.score += Math.ceil(100 / state.list.length);
 
-    /* 오른쪽 패널: 선택지 숨기고 피드백 표시 */
-    var optContainer = document.getElementById('optContainer');
+    var optContainer  = document.getElementById('optContainer');
     var feedbackPanel = document.getElementById('feedbackPanel');
-    var fbResult = document.getElementById('fbResult');
-    var fbText = document.getElementById('fbText');
-    var btnNext = document.getElementById('btnNext');
+    var fbResult      = document.getElementById('fbResult');
+    var fbText        = document.getElementById('fbText');
+    var btnNext       = document.getElementById('btnNext');
 
-    if (optContainer) optContainer.style.display = 'none';
-    if (feedbackPanel) feedbackPanel.style.display = 'flex';
-
+    if (optContainer)  optContainer.style.display  = 'none';
+    if (feedbackPanel) feedbackPanel.style.display  = 'flex';
     if (fbResult) {
       fbResult.className = 'feedback-result ' + (correct ? 'correct' : 'wrong');
       fbResult.innerText = correct ? '✓ 판독 성공 (CORRECT)' : '✗ 판독 실패 (FAILED)';
     }
-    if (fbText) fbText.innerText = q.feedback || '등록된 판독 해설이 없습니다.';
-    if (btnNext) btnNext.style.display = 'block';
+    if (fbText)   fbText.innerText   = q.feedback || '등록된 판독 해설이 없습니다.';
+    if (btnNext)  btnNext.style.display = 'block';
   }
 
   function goNext() {
