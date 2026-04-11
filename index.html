@@ -131,10 +131,10 @@
 
   .option-list { display: grid; gap: 1rem; }
   .btn-option {
-    width: 100%; padding: 1.3rem 1.6rem; border-radius: 18px;
+    width: 100%; padding: 0.9rem 1.1rem; border-radius: 14px;
     background: rgba(255,255,255,0.04); border: 1px solid var(--border);
     color: var(--text-main); text-align: left; cursor: pointer;
-    font-size: 1.1rem; display: flex; gap: 1.2rem; align-items: center;
+    font-size: 0.95rem; display: flex; gap: 0.8rem; align-items: center;
   }
   .btn-option:hover:not(:disabled) { border-color: var(--accent-cyan); background: rgba(14, 165, 233, 0.12); transform: translateX(8px); }
   .btn-option.correct { background: rgba(16, 185, 129, 0.2) !important; border-color: var(--accent-green) !important; color: #6ee7b7; font-weight: 700; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
@@ -225,8 +225,8 @@
   /* ── 좌우 분할 퀴즈 레이아웃 ── */
   .quiz-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    grid-template-columns: 3fr 2fr;
+    gap: 1.2rem;
     align-items: start;
   }
   .quiz-left { display: flex; flex-direction: column; }
@@ -236,15 +236,15 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 20px;
-    padding: 1.5rem;
-    min-height: 360px;
+    padding: 1.2rem;
+    min-height: 480px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 0.8rem;
+    gap: 0.7rem;
   }
 
-  .quiz-layout .image-container { height: 360px; margin-bottom: 0; }
+  .quiz-layout .image-container { height: 480px; margin-bottom: 0; }
 
   .feedback-panel {
     display: none;
@@ -286,7 +286,7 @@
 
   @media (max-width: 700px) {
     .quiz-layout { grid-template-columns: 1fr; }
-    .quiz-layout .image-container { height: 260px; }
+    .quiz-layout .image-container { height: 280px; }
     .right-panel { min-height: auto; }
   }
 </style>
