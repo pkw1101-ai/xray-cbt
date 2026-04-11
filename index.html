@@ -529,9 +529,19 @@ var XR = (function() {
     var screens = document.querySelectorAll('#xray-app-root .screen');
     for (var i = 0; i < screens.length; i++) {
       screens[i].style.display = 'none';
+      screens[i].style.pointerEvents = 'none';
     }
     var target = document.getElementById(id);
-    if (target) target.style.display = 'block';
+    if (target) {
+      target.style.display = 'block';
+      target.style.pointerEvents = 'auto';
+      /* 하위 버튼들 pointer-events 명시적 복원 */
+      var btns = target.querySelectorAll('button, a, input, select, textarea, label');
+      for (var j = 0; j < btns.length; j++) {
+        btns[j].style.pointerEvents = 'auto';
+        btns[j].disabled = false;
+      }
+    }
     window.scrollTo(0, 0);
     resetZoom();
   }
