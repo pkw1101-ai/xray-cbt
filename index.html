@@ -100,21 +100,26 @@
     margin-bottom: 2rem; word-break: keep-all; line-height: 1.5;
   }
 
-  /* ─── 이미지 컨테이너: 블로그스팟 대응 강화 ─── */
+  /* ─── 이미지 컨테이너 ─── */
   .image-container {
-    width: 100%; height: 420px; background: #000; border-radius: 20px;
-    margin-bottom: 2rem; position: relative; overflow: hidden;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: #000; border-radius: 20px;
+    margin-bottom: 0; position: relative; overflow: hidden;
     border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
     box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
   }
 
   .image-container img {
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
+    object-position: center;
     display: none;
     transform-origin: center center; cursor: grab; z-index: 2;
     filter: contrast(1.1) brightness(1.05);
-    position: relative;
+    position: absolute;
+    top: 0; left: 0;
   }
 
   .loader-text { color: var(--text-sub); font-size: 0.95rem; text-align: center; z-index: 1; font-weight: 500; padding: 1rem; }
@@ -227,7 +232,7 @@
   /* ── 좌우 분할 퀴즈 레이아웃 ── */
   .quiz-layout {
     display: grid;
-    grid-template-columns: 3fr 1.5fr;
+    grid-template-columns: 2fr 1fr;
     gap: 1.2rem;
     align-items: start;
   }
@@ -239,14 +244,14 @@
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 1.2rem;
-    min-height: 520px;
+    min-height: unset;
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 0.7rem;
   }
 
-  .quiz-layout .image-container { height: 520px; margin-bottom: 0; }
+  .quiz-layout .image-container { margin-bottom: 0; }
 
   .feedback-panel {
     display: none;
@@ -288,7 +293,7 @@
 
   @media (max-width: 700px) {
     .quiz-layout { grid-template-columns: 1fr; }
-    .quiz-layout .image-container { height: 280px; }
+    .quiz-layout .image-container { aspect-ratio: 4 / 3; }
     .right-panel { min-height: auto; }
   }
 </style>
