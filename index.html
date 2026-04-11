@@ -66,7 +66,7 @@
   .logo-dot { width: 8px; height: 8px; background: var(--accent-cyan); border-radius: 50%; box-shadow: var(--glow); animation: blink 1.5s infinite; }
   @keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
 
-  main { max-width: 760px; margin: 0 auto; padding: 2rem 1.2rem; min-height: 80vh; }
+  main { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1.2rem; min-height: 80vh; }
 
   .screen { display: none; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
 
@@ -109,7 +109,9 @@
   }
 
   .image-container img {
-    max-width: 100%; max-height: 100%; display: none;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: none;
     transform-origin: center center; cursor: grab; z-index: 2;
     filter: contrast(1.1) brightness(1.05);
     position: relative;
@@ -225,7 +227,7 @@
   /* ── 좌우 분할 퀴즈 레이아웃 ── */
   .quiz-layout {
     display: grid;
-    grid-template-columns: 3fr 2fr;
+    grid-template-columns: 3fr 1.5fr;
     gap: 1.2rem;
     align-items: start;
   }
@@ -237,14 +239,14 @@
     border: 1px solid var(--border);
     border-radius: 20px;
     padding: 1.2rem;
-    min-height: 480px;
+    min-height: 520px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 0.7rem;
   }
 
-  .quiz-layout .image-container { height: 480px; margin-bottom: 0; }
+  .quiz-layout .image-container { height: 520px; margin-bottom: 0; }
 
   .feedback-panel {
     display: none;
